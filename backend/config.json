@@ -1,0 +1,17 @@
+{
+    "database": {
+        "host": "localhost",
+        "user": "root",
+        "password": "password",
+        "database": "parking_system",
+        "port": 3306
+    },
+    "server": {
+        "port": 8080,
+        "host": "localhost"
+    },
+    "upload": {
+        "path": "./uploads",
+        "max_size": 5242880
+    }
+}

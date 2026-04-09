@@ -10,7 +10,8 @@ const Register = () => {
     password: '',
     confirmPassword: '',
     role: 'user',
-    phone: ''
+    phone: '',
+    address: ''
   });
   const [loading, setLoading] = useState(false);
   const navigate = useNavigate();
@@ -38,7 +39,8 @@ const Register = () => {
         email: formData.email,
         password: formData.password,
         role: formData.role,
-        phone: formData.phone
+        phone: formData.phone,
+        address: formData.address
       });
 
       if (response.data.success) {
@@ -89,6 +91,16 @@ const Register = () => {
             value={formData.phone}
             onChange={handleChange}
             placeholder="Enter your phone number"
+          />
+        </div>
+        <div className="form-group">
+          <label>Address</label>
+          <textarea
+            name="address"
+            value={formData.address}
+            onChange={handleChange}
+            placeholder="Enter your address"
+            rows="3"
           />
         </div>
         <div className="form-group">

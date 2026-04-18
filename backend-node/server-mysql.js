@@ -19,11 +19,12 @@ const pool = mysql.createPool({
   host: process.env.DB_HOST || 'localhost',
   port: process.env.DB_PORT || 3306,
   user: process.env.DB_USER || 'root',
-  password: process.env.DB_PASSWORD || '',
+  password: process.env.DB_PASSWORD || '090626',
   database: process.env.DB_NAME || 'smart_parking_system',
   waitForConnections: true,
   connectionLimit: 10,
-  queueLimit: 0
+  queueLimit: 0,
+  decimalNumbers: true
 });
 
 async function initDb() {
@@ -77,6 +78,30 @@ async function initDb() {
       FOREIGN KEY (parking_id) REFERENCES parking_spaces(id) ON DELETE CASCADE
     ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4
   `);
+
+  await pool.query(`
+    ALTER TABLE bookings
+      MODIFY COLUMN status ENUM('pending','confirmed','rejected','cancelled','completed') DEFAULT 'pending'
+  `);
+
+  // Add columns if they don't exist
+  try {
+    await pool.query(`ALTER TABLE bookings ADD COLUMN total_price DECIMAL(10,2)`);
+  } catch (err) {
+    if (!err.message.includes('Duplicate column name')) throw err;
+  }
+
+  try {
+    await pool.query(`ALTER TABLE bookings ADD COLUMN created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP`);
+  } catch (err) {
+    if (!err.message.includes('Duplicate column name')) throw err;
+  }
+
+  try {
+    await pool.query(`ALTER TABLE bookings ADD COLUMN updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP`);
+  } catch (err) {
+    if (!err.message.includes('Duplicate column name')) throw err;
+  }
 
   await pool.query(`
     CREATE TABLE IF NOT EXISTS reviews (
@@ -269,6 +294,8 @@ app.post('/api/book', async (req, res) => {
       end_time
     });
   } catch (err) {
+    console.error('Booking creation error:', err);
+    console.error('Booking request body:', req.body);
     res.json({ success: false, message: 'Booking failed' });
   }
 });
@@ -277,9 +304,30 @@ app.put('/api/confirm_booking/:id', async (req, res) => {
   const bookingId = req.params.id;
   const { status } = req.body;
   try {
+    const [bookingRows] = await pool.execute('SELECT status, parking_id FROM bookings WHERE id = ?', [bookingId]);
+    if (!bookingRows[0]) {
+      return res.json({ success: false, message: 'Booking not found' });
+    }
+
+    const currentStatus = bookingRows[0].status;
+    const parkingId = bookingRows[0].parking_id;
+
+    if (currentStatus !== 'confirmed' && status === 'confirmed') {
+      const [parkingRows] = await pool.execute('SELECT available_slots FROM parking_spaces WHERE id = ?', [parkingId]);
+      if (!parkingRows[0] || parkingRows[0].available_slots <= 0) {
+        return res.json({ success: false, message: 'No available slots to confirm booking' });
+      }
+      await pool.execute('UPDATE parking_spaces SET available_slots = available_slots - 1 WHERE id = ?', [parkingId]);
+    }
+
+    if (currentStatus === 'confirmed' && status !== 'confirmed') {
+      await pool.execute('UPDATE parking_spaces SET available_slots = LEAST(available_slots + 1, total_slots) WHERE id = ?', [parkingId]);
+    }
+
     await pool.execute('UPDATE bookings SET status = ? WHERE id = ?', [status, bookingId]);
     res.json({ success: true, message: 'Booking updated' });
   } catch (err) {
+    console.error('Confirm booking error:', err);
     res.json({ success: false, message: 'Failed to update booking' });
   }
 });
@@ -293,20 +341,22 @@ app.get('/api/my_bookings', async (req, res) => {
           CASE
             WHEN b.end_time < NOW() AND b.status = 'confirmed' THEN 'completed'
             ELSE b.status
-          END as current_status
+          END as status,
+          b.status as db_status
           FROM bookings b
           JOIN parking_spaces p ON b.parking_id = p.id
           WHERE b.user_id = ?
-          ORDER BY b.created_at DESC`, [userId]);
+          ORDER BY b.id DESC`, [userId]);
 
     for (const booking of rows) {
-      if (booking.current_status === 'completed' && booking.status !== 'completed') {
+      if (booking.status === 'completed' && booking.db_status !== 'completed') {
         await pool.execute('UPDATE bookings SET status = ? WHERE id = ?', ['completed', booking.id]);
       }
     }
 
     res.json({ success: true, bookings: rows });
   } catch (err) {
+    console.error('Error fetching user bookings:', err);
     res.json({ success: false, message: 'Failed to fetch bookings' });
   }
 });
@@ -314,27 +364,29 @@ app.get('/api/my_bookings', async (req, res) => {
 app.get('/api/owner_bookings/:ownerId', async (req, res) => {
   const ownerId = req.params.ownerId;
   try {
-    const [rows] = await pool.execute(`SELECT b.*, p.address, p.price, p.phone as owner_phone, u.name as user_name,
+    const [rows] = await pool.execute(`SELECT b.*, p.address, p.price, p.phone as owner_phone, u.name as user_name, u.email as user_email, u.phone as user_phone,
           DATE_FORMAT(b.start_time, '%Y-%m-%d %H:%i:%s') as formatted_start,
           DATE_FORMAT(b.end_time, '%Y-%m-%d %H:%i:%s') as formatted_end,
           CASE
             WHEN b.end_time < NOW() AND b.status = 'confirmed' THEN 'completed'
             ELSE b.status
-          END as current_status
+          END as status,
+          b.status as db_status
           FROM bookings b
           JOIN parking_spaces p ON b.parking_id = p.id
           JOIN users u ON b.user_id = u.id
           WHERE p.owner_id = ?
-          ORDER BY b.created_at DESC`, [ownerId]);
+          ORDER BY b.id DESC`, [ownerId]);
 
     for (const booking of rows) {
-      if (booking.current_status === 'completed' && booking.status !== 'completed') {
+      if (booking.status === 'completed' && booking.db_status !== 'completed') {
         await pool.execute('UPDATE bookings SET status = ? WHERE id = ?', ['completed', booking.id]);
       }
     }
 
     res.json({ success: true, bookings: rows });
   } catch (err) {
+    console.error('Error fetching owner bookings:', err);
     res.json({ success: false, message: 'Failed to fetch owner bookings' });
   }
 });
@@ -346,9 +398,10 @@ app.get('/api/bookings/:userId', async (req, res) => {
           FROM bookings b
           JOIN parking_spaces p ON b.parking_id = p.id
           WHERE b.user_id = ?
-          ORDER BY b.created_at DESC`, [userId]);
+          ORDER BY b.id DESC`, [userId]);
     res.json({ success: true, bookings: rows });
   } catch (err) {
+    console.error('Error fetching bookings by user:', err);
     res.json({ success: false, message: 'Failed to fetch bookings' });
   }
 });
@@ -370,8 +423,19 @@ function deg2rad(deg) {
 
 setInterval(async () => {
   try {
-    await pool.execute(`UPDATE bookings SET status = 'completed' WHERE status = 'confirmed' AND end_time < NOW()`);
-    console.log('Cleaned up expired bookings');
+    const [expiredBookings] = await pool.execute(
+      `SELECT id, parking_id FROM bookings WHERE status = 'confirmed' AND end_time < NOW()`
+    );
+    for (const booking of expiredBookings) {
+      await pool.execute('UPDATE bookings SET status = ? WHERE id = ?', ['completed', booking.id]);
+      await pool.execute(
+        'UPDATE parking_spaces SET available_slots = LEAST(available_slots + 1, total_slots) WHERE id = ?',
+        [booking.parking_id]
+      );
+    }
+    if (expiredBookings.length > 0) {
+      console.log(`Cleaned up ${expiredBookings.length} expired bookings`);
+    }
   } catch (err) {
     console.error('Error cleaning up expired bookings:', err);
   }

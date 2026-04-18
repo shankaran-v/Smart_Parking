@@ -25,6 +25,12 @@ const OwnerDashboard = () => {
     }
   }, [auth.user]);
 
+  useEffect(() => {
+    if (auth.user?.id && activeTab === 'bookings') {
+      fetchBookings();
+    }
+  }, [activeTab, auth.user]);
+
   const fetchBookings = async () => {
     try {
       const response = await getOwnerBookings(auth.user.id);
@@ -37,10 +43,17 @@ const OwnerDashboard = () => {
   };
 
   const handleChange = (e) => {
-    setParkingData({
+    const { name, value } = e.target;
+    const updatedData = {
       ...parkingData,
-      [e.target.name]: e.target.value
-    });
+      [name]: value
+    };
+
+    if (name === 'available_slots') {
+      updatedData.total_slots = value;
+    }
+
+    setParkingData(updatedData);
   };
 
   const getCurrentLocation = () => {
@@ -111,9 +124,13 @@ const OwnerDashboard = () => {
   };
 
   return (
-    <div>
-      <h1>Owner Dashboard</h1>
-      <p>Welcome, {auth.user?.name}!</p>
+    <div className="dashboard-page">
+      <div className="dashboard-header">
+        <div>
+          <h1>Owner Dashboard</h1>
+          <p>Welcome, {auth.user?.name}! Manage your parking and bookings from one place.</p>
+        </div>
+      </div>
 
       <div className="tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <button 
@@ -221,11 +238,18 @@ const OwnerDashboard = () => {
       )}
 
       {activeTab === 'bookings' && (
-        <BookingsList 
-          bookings={bookings} 
-          isOwner={true}
-          onConfirm={handleConfirmBooking}
-        />
+        <div>
+          <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '20px' }}>
+            <button className="btn" onClick={fetchBookings} style={{ width: 'auto', padding: '10px 20px' }}>
+              Refresh Requests
+            </button>
+          </div>
+          <BookingsList 
+            bookings={bookings} 
+            isOwner={true}
+            onConfirm={handleConfirmBooking}
+          />
+        </div>
       )}
     </div>
   );

@@ -13,12 +13,14 @@ const UserDashboard = () => {
   const [searchRadius, setSearchRadius] = useState(5);
   const [activeTab, setActiveTab] = useState('search');
   const [bookingDuration, setBookingDuration] = useState(1); // hours
+  const [bookingMinutes, setBookingMinutes] = useState(0); // minutes
   const [selectedParking, setSelectedParking] = useState(null);
   const [userLocation, setUserLocation] = useState(null);
 
   const selectedParkingData = selectedParking ? parkingSpaces.find((p) => p.id === selectedParking) : null;
   const pricePerHour = selectedParkingData?.price || 0;
-  const estimatedTotal = (pricePerHour * bookingDuration).toFixed(2);
+  const durationHours = bookingDuration + bookingMinutes / 60;
+  const estimatedTotal = (pricePerHour * durationHours).toFixed(2);
 
   useEffect(() => {
     getUserLocation();
@@ -89,12 +91,16 @@ const UserDashboard = () => {
     setSelectedParking(parkingId);
   };
 
-  const confirmBooking = async () => {
+  const requestBooking = async () => {
     if (!selectedParking) return;
+    if (bookingDuration === 0 && bookingMinutes === 0) {
+      toast.error('Please choose a duration for your booking.');
+      return;
+    }
 
-    // Calculate start and end times
     const startTime = new Date();
-    const endTime = new Date(startTime.getTime() + bookingDuration * 60 * 60 * 1000);
+    const durationMs = (bookingDuration * 60 + bookingMinutes) * 60 * 1000;
+    const endTime = new Date(startTime.getTime() + durationMs);
 
     try {
       const response = await createBooking({
@@ -105,7 +111,21 @@ const UserDashboard = () => {
       });
 
       if (response.data.success) {
-        toast.success(`Booking confirmed! Total: $${response.data.total_price.toFixed(2)}`);
+        const totalPrice = Number(response.data.total_price);
+        toast.success(`Booking request sent! Total: $${totalPrice.toFixed(2)}`);
+        const newBooking = {
+          id: response.data.booking_id,
+          parking_id: selectedParking,
+          address: selectedParkingData?.address || '',
+          price: pricePerHour,
+          start_time: startTime.toISOString().slice(0, 19).replace('T', ' '),
+          end_time: endTime.toISOString().slice(0, 19).replace('T', ' '),
+          total_price: totalPrice,
+          status: 'pending',
+          created_at: new Date().toISOString()
+        };
+        setBookings((prev) => [newBooking, ...prev]);
+        setActiveTab('bookings');
         fetchBookings();
         searchNearbyParking();
         setSelectedParking(null);
@@ -113,7 +133,7 @@ const UserDashboard = () => {
         toast.error(response.data.message);
       }
     } catch (error) {
-      toast.error('Failed to create booking');
+      toast.error('Failed to request booking');
       console.error(error);
     }
   };
@@ -123,9 +143,13 @@ const UserDashboard = () => {
   };
 
   return (
-    <div>
-      <h1>User Dashboard</h1>
-      <p>Welcome, {auth.user?.name}!</p>
+    <div className="dashboard-page">
+      <div className="dashboard-header">
+        <div>
+          <h1>User Dashboard</h1>
+          <p>Welcome, {auth.user?.name}! Find parking fast with powerful search and smooth booking.</p>
+        </div>
+      </div>
 
       <div className="tabs" style={{ display: 'flex', gap: '10px', marginBottom: '20px' }}>
         <button 
@@ -146,15 +170,10 @@ const UserDashboard = () => {
 
       {activeTab === 'search' && (
         <div>
-          <div style={{ 
-            background: 'white', 
-            padding: '20px', 
-            borderRadius: '10px', 
-            marginBottom: '20px' 
-          }}>
+          <div className="search-controls">
             <h3>Search Nearby Parking</h3>
-            <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
-              <div className="form-group" style={{ flex: 1 }}>
+            <div style={{ display: 'flex', gap: '10px', alignItems: 'flex-end', flexWrap: 'wrap' }}>
+              <div className="form-group" style={{ flex: 1, minWidth: '200px' }}>
                 <label>Search Radius (km)</label>
                 <input
                   type="number"
@@ -168,7 +187,7 @@ const UserDashboard = () => {
               <button 
                 onClick={searchNearbyParking} 
                 className="btn" 
-                style={{ marginTop: '20px' }}
+                style={{ width: 'auto', padding: '12px 24px' }}
                 disabled={loading}
               >
                 {loading ? 'Searching...' : 'Search'}
@@ -176,7 +195,7 @@ const UserDashboard = () => {
               <button 
                 onClick={getUserLocation} 
                 className="btn" 
-                style={{ marginTop: '20px', background: '#28a745' }}
+                style={{ width: 'auto', padding: '12px 24px', background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)' }}
               >
                 Update Location
               </button>
@@ -184,13 +203,8 @@ const UserDashboard = () => {
           </div>
 
           {userLocation && (
-            <div style={{ 
-              background: '#e3f2fd', 
-              padding: '10px', 
-              borderRadius: '5px', 
-              marginBottom: '20px' 
-            }}>
-              📍 Your Location: {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}
+            <div className="location-display">
+              📍 <strong>Your Location:</strong> {userLocation.lat.toFixed(6)}, {userLocation.lng.toFixed(6)}
             </div>
           )}
 
@@ -214,66 +228,57 @@ const UserDashboard = () => {
 
           {/* Booking Confirmation Modal */}
           {selectedParking && (
-            <div style={{
-              position: 'fixed',
-              top: 0,
-              left: 0,
-              right: 0,
-              bottom: 0,
-              backgroundColor: 'rgba(0,0,0,0.5)',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              zIndex: 1000
-            }}>
-              <div style={{
-                background: 'white',
-                padding: '30px',
-                borderRadius: '10px',
-                maxWidth: '400px',
-                width: '90%'
-              }}>
-                <h3>Confirm Booking</h3>
-                <div style={{ marginBottom: '20px' }}>
-                  <label style={{ display: 'block', marginBottom: '10px' }}>
-                    Duration (hours):
-                  </label>
-                  <select
-                    value={bookingDuration}
-                    onChange={(e) => setBookingDuration(Number(e.target.value))}
-                    style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}
-                  >
-                    <option value={1}>1 hour</option>
-                    <option value={2}>2 hours</option>
-                    <option value={3}>3 hours</option>
-                    <option value={4}>4 hours</option>
-                    <option value={6}>6 hours</option>
-                    <option value={8}>8 hours</option>
-                    <option value={12}>12 hours</option>
-                    <option value={24}>24 hours</option>
-                  </select>
+            <div className="modal-overlay">
+              <div className="modal-content">
+                <h3>Request Booking</h3>
+                <div className="form-group">
+                  <label>Booking Duration:</label>
+                  <div className="duration-selector">
+                    <select
+                      value={bookingDuration}
+                      onChange={(e) => setBookingDuration(Number(e.target.value))}
+                    >
+                      <option value={0}>0 hours</option>
+                      <option value={1}>1 hour</option>
+                      <option value={2}>2 hours</option>
+                      <option value={3}>3 hours</option>
+                      <option value={4}>4 hours</option>
+                      <option value={6}>6 hours</option>
+                      <option value={8}>8 hours</option>
+                      <option value={12}>12 hours</option>
+                      <option value={24}>24 hours</option>
+                    </select>
+                    <select
+                      value={bookingMinutes}
+                      onChange={(e) => setBookingMinutes(Number(e.target.value))}
+                    >
+                      <option value={0}>0 minutes</option>
+                      <option value={15}>15 minutes</option>
+                      <option value={30}>30 minutes</option>
+                      <option value={45}>45 minutes</option>
+                    </select>
+                  </div>
                 </div>
 
-                <div style={{ marginBottom: '20px', padding: '15px', backgroundColor: '#f8f9fa', borderRadius: '5px' }}>
-                  <p><strong>Start:</strong> {new Date().toLocaleString()}</p>
-                  <p><strong>End:</strong> {new Date(Date.now() + bookingDuration * 60 * 60 * 1000).toLocaleString()}</p>
-                  <p><strong>Duration:</strong> {bookingDuration} hour{bookingDuration > 1 ? 's' : ''}</p>
+                <div className="booking-summary">
+                  <p><strong>Start:</strong> {new Date().toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p><strong>End:</strong> {new Date(Date.now() + (bookingDuration * 60 + bookingMinutes) * 60 * 1000).toLocaleString([], { month: 'short', day: 'numeric', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p><strong>Duration:</strong> {bookingDuration} hour{bookingDuration !== 1 ? 's' : ''} {bookingMinutes > 0 ? `and ${bookingMinutes} minutes` : ''}</p>
                   <p><strong>Price per hour:</strong> ${pricePerHour.toFixed(2)}</p>
                   <p><strong>Estimated total:</strong> ${estimatedTotal}</p>
                 </div>
 
-                <div style={{ display: 'flex', gap: '10px' }}>
+                <div className="modal-buttons">
                   <button
-                    onClick={confirmBooking}
+                    onClick={requestBooking}
                     className="btn"
-                    style={{ flex: 1 }}
                   >
-                    Confirm Booking
+                    Send Request
                   </button>
                   <button
                     onClick={() => setSelectedParking(null)}
                     className="btn"
-                    style={{ flex: 1, backgroundColor: '#6c757d' }}
+                    style={{ background: '#64748b' }}
                   >
                     Cancel
                   </button>

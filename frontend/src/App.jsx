@@ -12,10 +12,26 @@ import './App.css';
 export const AuthContext = createContext();
 
 function App() {
-  const [auth, setAuth] = useState({
-    isAuthenticated: false,
-    user: null,
-    token: null
+  const [auth, setAuth] = useState(() => {
+    try {
+      const stored = localStorage.getItem('user');
+      if (stored) {
+        const userData = JSON.parse(stored);
+        return {
+          isAuthenticated: true,
+          user: userData,
+          token: userData.token || null
+        };
+      }
+    } catch (error) {
+      console.error('Error parsing user data from localStorage:', error);
+      localStorage.removeItem('user');
+    }
+    return {
+      isAuthenticated: false,
+      user: null,
+      token: null
+    };
   });
 
   const login = (userData) => {
@@ -47,25 +63,33 @@ function App() {
     <AuthContext.Provider value={{ auth, login, logout }}>
       <Router>
         <div className="App">
+          {/* Floating Parking Icons */}
+          <div className="parking-icon">🚗</div>
+          <div className="parking-icon">🅿️</div>
+          <div className="parking-icon">🚙</div>
+          <div className="parking-icon">🅿️</div>
+          <div className="parking-icon">🚗</div>
+
           <Navbar />
           <div className="container">
             <Routes>
               <Route path="/login" element={<Login />} />
               <Route path="/register" element={<Register />} />
-              <Route 
-                path="/owner-dashboard" 
-                element={auth.isAuthenticated && auth.user?.role === 'owner' ? 
-                  <OwnerDashboard /> : <Navigate to="/login" />} 
+              <Route
+                path="/owner-dashboard"
+                element={auth.isAuthenticated && auth.user?.role === 'owner' ?
+                  <OwnerDashboard /> : <Navigate to="/login" />}
               />
-              <Route 
-                path="/user-dashboard" 
-                element={auth.isAuthenticated && auth.user?.role === 'user' ? 
-                  <UserDashboard /> : <Navigate to="/login" />} 
+              <Route
+                path="/user-dashboard"
+                element={auth.isAuthenticated && auth.user?.role === 'user' ?
+                  <UserDashboard /> : <Navigate to="/login" />}
               />
               <Route path="/" element={
-                <Navigate to={auth.isAuthenticated ? 
-                  (auth.user?.role === 'owner' ? '/owner-dashboard' : '/user-dashboard') : '/login'} />} 
+                <Navigate to={auth.isAuthenticated ?
+                  (auth.user?.role === 'owner' ? '/owner-dashboard' : '/user-dashboard') : '/login'} />}
               />
+              <Route path="*" element={<Navigate to="/" />} />
             </Routes>
           </div>
           <ToastContainer position="top-right" autoClose={3000} />

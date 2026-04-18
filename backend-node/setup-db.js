@@ -85,6 +85,14 @@ async function setupDatabase() {
     `);
 
     await connection.execute(`
+      ALTER TABLE bookings
+        MODIFY COLUMN status ENUM('pending','confirmed','rejected','cancelled','completed') DEFAULT 'pending',
+        ADD COLUMN IF NOT EXISTS total_price DECIMAL(10,2),
+        ADD COLUMN IF NOT EXISTS created_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP,
+        ADD COLUMN IF NOT EXISTS updated_at TIMESTAMP NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP
+    `);
+
+    await connection.execute(`
       CREATE TABLE IF NOT EXISTS reviews (
         id INT AUTO_INCREMENT PRIMARY KEY,
         booking_id INT NOT NULL,

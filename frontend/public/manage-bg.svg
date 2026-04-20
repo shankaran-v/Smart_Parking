@@ -1,0 +1,30 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 800" preserveAspectRatio="xMidYMid slice">
+  <defs>
+    <linearGradient id="bgGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#0f172a"/>
+      <stop offset="100%" stop-color="#4f46e5"/>
+    </linearGradient>
+    <linearGradient id="lineGrad" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0%" stop-color="#7c3aed" stop-opacity="0.75"/>
+      <stop offset="100%" stop-color="#38bdf8" stop-opacity="0.75"/>
+    </linearGradient>
+  </defs>
+  <rect width="1200" height="800" fill="url(#bgGrad)"/>
+  <g fill="none" stroke="url(#lineGrad)" stroke-width="14" opacity="0.5">
+    <path d="M200 220 C 340 140, 460 140, 600 220" />
+    <path d="M300 320 L 300 520" />
+    <path d="M300 520 C 380 620, 560 620, 640 520" />
+    <path d="M720 280 L 920 280" />
+    <path d="M920 280 C 980 280, 980 380, 920 380" />
+    <path d="M720 480 C 820 380, 980 380, 1080 480" />
+  </g>
+  <g opacity="0.7" fill="#f8fafc">
+    <circle cx="300" cy="220" r="16" fill="#38bdf8"/>
+    <circle cx="920" cy="280" r="18" fill="#60a5fa"/>
+    <circle cx="640" cy="520" r="14" fill="#a78bfa"/>
+  </g>
+  <g transform="translate(540 170) scale(1.4)">
+    <path d="M176 0c-48.5 0-88 39.5-88 88 0 48.5 88 186 88 186s88-137.5 88-186c0-48.5-39.5-88-88-88zm0 118.8c-17.2 0-31.2-14-31.2-31.2s14-31.2 31.2-31.2 31.2 14 31.2 31.2-14 31.2-31.2 31.2z" fill="#38bdf8" opacity="0.85"/>
+    <path d="M200 218h-48v-16c0-26.5-21.5-48-48-48s-48 21.5-48 48v16h-48a16 16 0 0 0-16 16v80a16 16 0 0 0 16 16h160a16 16 0 0 0 16-16v-80a16 16 0 0 0-16-16zm-88-96c8.8 0 16 7.2 16 16v16h-32v-16c0-8.8 7.2-16 16-16z" fill="#ffffff" opacity="0.55"/>
+  </g>
+</svg>

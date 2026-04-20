@@ -124,7 +124,7 @@ const OwnerDashboard = () => {
   };
 
   return (
-    <div className="dashboard-page">
+    <div className={`dashboard-page ${activeTab === 'bookings' ? 'manage-page' : ''}`}>
       <div className="dashboard-header">
         <div>
           <h1>Owner Dashboard</h1>
@@ -150,90 +150,95 @@ const OwnerDashboard = () => {
       </div>
 
       {activeTab === 'add' && (
-        <div className="form-container">
-          <h3>Add New Parking Space</h3>
-          <form onSubmit={handleSubmit}>
-            <div className="form-group">
-              <label>Address</label>
-              <textarea
-                name="address"
-                value={parkingData.address}
-                onChange={handleChange}
-                required
-                rows="3"
-                placeholder="Enter full address"
-              />
-            </div>
-            
-            <div className="form-group">
-              <label>GPS Coordinates</label>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <input
-                  type="number"
-                  name="latitude"
-                  value={parkingData.latitude}
+        <div className="parking-add-section">
+          <div className="parking-add-image">
+            <img src="/parking-slot-bg.png" alt="Parking slot illustration" />
+          </div>
+          <div className="form-container">
+            <h3>Add New Parking Space</h3>
+            <form onSubmit={handleSubmit}>
+              <div className="form-group">
+                <label>Address</label>
+                <textarea
+                  name="address"
+                  value={parkingData.address}
                   onChange={handleChange}
-                  placeholder="Latitude"
-                  step="any"
                   required
+                  rows="3"
+                  placeholder="Enter full address"
                 />
-                <input
-                  type="number"
-                  name="longitude"
-                  value={parkingData.longitude}
-                  onChange={handleChange}
-                  placeholder="Longitude"
-                  step="any"
-                  required
-                />
-                <button type="button" onClick={getCurrentLocation} style={{ width: 'auto' }}>
-                  Get Location
-                </button>
               </div>
-            </div>
+              
+              <div className="form-group">
+                <label>GPS Coordinates</label>
+                <div className="coordinates-inputs">
+                  <input
+                    type="number"
+                    name="latitude"
+                    value={parkingData.latitude}
+                    onChange={handleChange}
+                    placeholder="Latitude"
+                    step="any"
+                    required
+                  />
+                  <input
+                    type="number"
+                    name="longitude"
+                    value={parkingData.longitude}
+                    onChange={handleChange}
+                    placeholder="Longitude"
+                    step="any"
+                    required
+                  />
+                  <button type="button" className="btn location-btn" onClick={getCurrentLocation}>
+                    Get Location
+                  </button>
+                </div>
+              </div>
 
-            <div className="form-group">
-              <label>Price per Hour ($)</label>
-              <input
-                type="number"
-                name="price"
-                value={parkingData.price}
-                onChange={handleChange}
-                required
-                step="0.01"
-                placeholder="Enter price"
-              />
-            </div>
+              <div className="form-group">
+                <label>Price per Hour ($)</label>
+                <input
+                  type="number"
+                  name="price"
+                  value={parkingData.price}
+                  onChange={handleChange}
+                  required
+                  step="0.01"
+                  placeholder="Enter price"
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Contact Phone</label>
-              <input
-                type="tel"
-                name="phone"
-                value={parkingData.phone}
-                onChange={handleChange}
-                required
-                placeholder="Your contact number"
-              />
-            </div>
+              <div className="form-group">
+                <label>Contact Phone</label>
+                <input
+                  type="tel"
+                  name="phone"
+                  value={parkingData.phone}
+                  onChange={handleChange}
+                  required
+                  placeholder="Your contact number"
+                />
+              </div>
 
-            <div className="form-group">
-              <label>Available Slots</label>
-              <input
-                type="number"
-                name="available_slots"
-                value={parkingData.available_slots}
-                onChange={handleChange}
-                required
-                min="1"
-                placeholder="Number of slots"
-              />
-            </div>
+              <div className="form-group">
+                <label>Available Slots</label>
+                <input
+                  type="number"
+                  name="available_slots"
+                  value={parkingData.available_slots}
+                  onChange={handleChange}
+                  required
+                  min="1"
+                  placeholder="Number of slots"
+                />
+              </div>
 
-            <button type="submit" className="btn" disabled={loading}>
-              {loading ? 'Adding...' : 'Add Parking Space'}
-            </button>
-          </form>
+              <button type="submit" className="btn" disabled={loading}>
+                {loading ? 'Adding...' : 'Add Parking Space'}
+              </button>
+            </form>
+          </div>
         </div>
       )}
 

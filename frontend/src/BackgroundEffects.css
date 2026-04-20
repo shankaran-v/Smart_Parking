@@ -1,0 +1,235 @@
+/* Advanced 3D Background Effects and Particle Animations */
+
+/* Floating 3D Particles */
+@keyframes particle1 {
+  0% {
+    transform: translate(0, 0) scale(1) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+    opacity: 0.8;
+  }
+  25% {
+    transform: translate(80px, -100px) scale(1.2) rotateX(45deg) rotateY(-45deg) rotateZ(90deg);
+    opacity: 0.9;
+  }
+  50% {
+    transform: translate(-60px, 120px) scale(0.9) rotateX(-45deg) rotateY(45deg) rotateZ(180deg);
+    opacity: 0.7;
+  }
+  75% {
+    transform: translate(120px, -80px) scale(1.1) rotateX(30deg) rotateY(-30deg) rotateZ(270deg);
+    opacity: 0.85;
+  }
+  100% {
+    transform: translate(0, 0) scale(1) rotateX(0deg) rotateY(0deg) rotateZ(360deg);
+    opacity: 0.8;
+  }
+}
+
+@keyframes particle2 {
+  0% {
+    transform: translate(0, 0) scale(0.9) rotateX(0deg) rotateY(0deg);
+    opacity: 0.7;
+  }
+  33% {
+    transform: translate(-100px, 80px) scale(1.15) rotateX(-60deg) rotateY(60deg);
+    opacity: 0.9;
+  }
+  66% {
+    transform: translate(90px, -110px) scale(0.85) rotateX(60deg) rotateY(-60deg);
+    opacity: 0.75;
+  }
+  100% {
+    transform: translate(0, 0) scale(0.9) rotateX(0deg) rotateY(0deg);
+    opacity: 0.7;
+  }
+}
+
+@keyframes particle3 {
+  0% {
+    transform: translate(0, 0) scale(1.1) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+    opacity: 0.6;
+  }
+  25% {
+    transform: translate(60px, -90px) scale(0.95) rotateX(35deg) rotateY(-35deg) rotateZ(180deg);
+    opacity: 0.85;
+  }
+  50% {
+    transform: translate(-80px, 100px) scale(1.05) rotateX(-35deg) rotateY(35deg) rotateZ(360deg);
+    opacity: 0.7;
+  }
+  75% {
+    transform: translate(100px, -70px) scale(0.9) rotateX(50deg) rotateY(-50deg) rotateZ(540deg);
+    opacity: 0.8;
+  }
+  100% {
+    transform: translate(0, 0) scale(1.1) rotateX(0deg) rotateY(0deg) rotateZ(720deg);
+    opacity: 0.6;
+  }
+}
+
+/* Mesh Gradient Shifting */
+@keyframes meshGradientShift {
+  0% {
+    background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%;
+  }
+  50% {
+    background-position: 100% 100%, 0% 100%, 100% 0%, 0% 0%;
+  }
+  100% {
+    background-position: 0% 0%, 100% 0%, 0% 100%, 100% 100%;
+  }
+}
+
+/* Parallax Depth Movement */
+@keyframes parallaxMove {
+  0%, 100% {
+    transform: perspective(1000px) rotateX(0deg) rotateY(0deg) translateZ(0px);
+  }
+  25% {
+    transform: perspective(1000px) rotateX(2deg) rotateY(2deg) translateZ(20px);
+  }
+  50% {
+    transform: perspective(1000px) rotateX(-2deg) rotateY(-2deg) translateZ(-20px);
+  }
+  75% {
+    transform: perspective(1000px) rotateX(1deg) rotateY(-3deg) translateZ(15px);
+  }
+}
+
+/* Chromatic Aberration */
+@keyframes chromaticShift {
+  0%, 100% {
+    filter: drop-shadow(0 0 1px rgba(255, 0, 0, 0.3)) 
+            drop-shadow(0 0 1px rgba(0, 255, 0, 0.3))
+            drop-shadow(0 0 1px rgba(0, 0, 255, 0.3));
+  }
+  50% {
+    filter: drop-shadow(2px 0 1px rgba(255, 0, 0, 0.3)) 
+            drop-shadow(-1px 1px 1px rgba(0, 255, 0, 0.3))
+            drop-shadow(-1px -1px 1px rgba(0, 0, 255, 0.3));
+  }
+}
+
+/* Swirl Effect */
+@keyframes swirl {
+  0% {
+    transform: rotate(0deg) scale(1);
+  }
+  50% {
+    transform: rotate(180deg) scale(1.05);
+  }
+  100% {
+    transform: rotate(360deg) scale(1);
+  }
+}
+
+/* Gradient Wave */
+@keyframes gradientWave {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* Enhanced Dashboard Glow */
+@keyframes dashboardGlowEnhanced {
+  0%, 100% {
+    box-shadow: 
+      0 0 20px rgba(124, 58, 237, 0.3),
+      0 0 40px rgba(59, 130, 246, 0.2),
+      inset 0 0 20px rgba(124, 58, 237, 0.1);
+  }
+  50% {
+    box-shadow: 
+      0 0 40px rgba(124, 58, 237, 0.5),
+      0 0 80px rgba(59, 130, 246, 0.3),
+      inset 0 0 40px rgba(124, 58, 237, 0.2);
+  }
+}
+
+/* Floating Animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0px) translateX(0px);
+  }
+  33% {
+    transform: translateY(-20px) translateX(10px);
+  }
+  66% {
+    transform: translateY(-10px) translateX(-10px);
+  }
+}
+
+/* Pulse Glow */
+@keyframes pulseGlow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(124, 58, 237, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 30px rgba(124, 58, 237, 0.8), 0 0 50px rgba(59, 130, 246, 0.6);
+  }
+}
+
+/* Shimmer Wave */
+@keyframes shimmerWave {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+/* Blur Shift */
+@keyframes blurShift {
+  0%, 100% {
+    filter: blur(0px);
+  }
+  50% {
+    filter: blur(2px);
+  }
+}
+
+/* Color Cycle */
+@keyframes colorCycle {
+  0% {
+    filter: hue-rotate(0deg);
+  }
+  33% {
+    filter: hue-rotate(120deg);
+  }
+  66% {
+    filter: hue-rotate(240deg);
+  }
+  100% {
+    filter: hue-rotate(360deg);
+  }
+}
+
+/* Apply to Elements */
+.dashboard-header {
+  animation: float 6s ease-in-out infinite, pulseGlow 4s ease-in-out infinite;
+}
+
+.dashboard-page.user-dashboard {
+  animation: parallaxMove 20s ease-in-out infinite;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 768px) {
+  @keyframes particle1 {
+    0% {
+      transform: translate(0, 0) scale(0.8) rotateX(0deg) rotateY(0deg);
+      opacity: 0.6;
+    }
+    50% {
+      transform: translate(40px, -50px) scale(0.95) rotateX(30deg) rotateY(-30deg);
+      opacity: 0.8;
+    }
+    100% {
+      transform: translate(0, 0) scale(0.8) rotateX(0deg) rotateY(0deg);
+      opacity: 0.6;
+    }
+  }
+}
